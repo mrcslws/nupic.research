@@ -19,27 +19,16 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
+"""
+Expansions are mixins that add new methods to the get_execution_order() or add
+self attributes or utility methods used by other mixins or subclasses.
+"""
 
-class ConstrainParameters(object):
-    """
-    Calls modules' "constrain_parameters" method after every batch.
-    """
-    def setup_experiment(self, config):
-        super().setup_experiment(config)
-        self._constrain_parameters_modules = [
-            module
-            for module in self.model.modules()
-            if hasattr(module, "constrain_parameters")
-        ]
-
-    def post_optimizer_step(self, **kwargs):
-        super().post_optimizer_step(**kwargs)
-        for module in self._constrain_parameters_modules:
-            module.constrain_parameters()
-
-    @classmethod
-    def get_execution_order(cls):
-        eo = super().get_execution_order()
-        eo["setup_experiment"].append("ConstrainParameters initialization")
-        eo["post_optimizer_step"].append("ConstrainParameters")
-        return eo
+from .composite_loss import CompositeLoss
+from .distributed import *
+from .evaluation_metrics import *
+from .has_epochs import *
+from .has_lr_scheduler import *
+from .has_model import *
+from .has_optimizer import *
+from .step_based_logging import *

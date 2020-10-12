@@ -19,8 +19,10 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
+from nupic.research.frameworks.vernon import expansions
 
-class LogEveryLearningRate:
+
+class LogEveryLearningRate(expansions.StepBasedLogging):
     """
     Include the learning rate for every batch in the result dict.
 
@@ -32,9 +34,10 @@ class LogEveryLearningRate:
         self.momentum_history = []
 
     def post_batch(self, model, error_loss, complexity_loss, batch_idx,
-                   *args, **kwargs):
-        super().post_batch(model, error_loss, complexity_loss, batch_idx,
-                           *args, **kwargs)
+                   **kwargs):
+        super().post_batch(model=model, error_loss=error_loss,
+                           complexity_loss=complexity_loss, batch_idx=batch_idx,
+                           **kwargs)
 
         if self.should_log_batch(batch_idx):
             # Get the lr and momentum from the first param group.

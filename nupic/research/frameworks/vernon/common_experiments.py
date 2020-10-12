@@ -19,16 +19,12 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
-from nupic.research.frameworks.vernon import mixins
-from nupic.research.frameworks.vernon.handlers import (
-    ImagenetExperiment,
-    SupervisedExperiment,
-)
+from nupic.research.frameworks.vernon import experiments, mixins
 
 
 class RezeroedKWinnersImagenetExperiment(mixins.RezeroWeights,
                                          mixins.UpdateBoostStrength,
-                                         ImagenetExperiment):
+                                         experiments.ImagenetExperiment):
     pass
 
 
@@ -45,7 +41,9 @@ class KnowledgeDistillationCLExperiment(mixins.KnowledgeDistillationCL,
 class RezeroedKWinnersGSCExperiment(mixins.RezeroWeights,
                                     mixins.UpdateBoostStrength,
                                     mixins.LoadPreprocessedData,
-                                    SupervisedExperiment):
+                                    mixins.SelectiveWeightDecay,
+                                    mixins.FixedLRSchedule,
+                                    experiments.SupervisedExperiment):
     pass
 
 

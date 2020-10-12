@@ -53,8 +53,8 @@ class RezeroWeights:
                 module.rezero_weights()
         return model
 
-    def post_batch(self, *args, **kwargs):
-        super().post_batch(*args, **kwargs)
+    def post_optimizer_step(self, **kwargs):
+        super().post_optimizer_step(**kwargs)
         for module in self._rezero_modules:
             module.rezero_weights()
 
@@ -75,6 +75,6 @@ class RezeroWeights:
         eo = super().get_execution_order()
         eo["setup_experiment"].append("RezeroWeights logging")
         eo["create_model"].append("RezeroWeights")
-        eo["post_batch"].append("RezeroWeights")
+        eo["post_optimizer_step"].append("RezeroWeights")
         eo["post_epoch"].append("RezeroWeights logging")
         return eo

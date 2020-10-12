@@ -25,7 +25,7 @@ import torch
 from tqdm import tqdm
 
 
-class CompositeLoss():
+class CompositeLoss:
     """
     Defines a new training loop that has direct access to Experiment attributes
     and can be customized for more complex loss functions

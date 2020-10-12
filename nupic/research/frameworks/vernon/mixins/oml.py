@@ -43,22 +43,19 @@ class OnlineMetaLearning(object):
         self.run_meta_test = config.get("run_meta_test", False)
         super().setup_experiment(config)
 
-    def create_loaders(self, config):
-        super().create_loaders(config)
-
         # Only initialize test loader if needed
-        if not self.run_meta_test:
-            return
+        if self.run_meta_test:
+            eval_set = self.load_dataset(config, train=False)
 
-        eval_set = self.load_dataset(config, train=False)
+            self.test_train_loader = self.create_train_dataloader(config,
+                                                                  eval_set)
+            self.test_test_loader = self.create_validation_dataloader(config,
+                                                                      eval_set)
 
-        self.test_train_loader = self.create_train_dataloader(config, eval_set)
-        self.test_test_loader = self.create_validation_dataloader(config, eval_set)
-
-        self.num_classes_eval = min(
-            config.get("num_classes_eval", 50),
-            self.test_train_loader.sampler.num_classes
-        )
+            self.num_classes_eval = min(
+                config.get("num_classes_eval", 50),
+                self.test_train_loader.sampler.num_classes
+            )
 
     def post_epoch(self):
         if self.should_stop() and self.run_meta_test:
@@ -168,7 +165,7 @@ class OnlineMetaLearning(object):
     def get_execution_order(cls):
         eo = super().get_execution_order()
         eo["setup_experiment"].insert(0, "OML additional attributes")
+        eo["setup_experiment"].append("Create loaders for the meta testing phase")
         eo["post_epoch"].append("Run meta testing phase")
-        eo["create_loaders"].append("Create loaders for the meta testing phase")
 
         return eo

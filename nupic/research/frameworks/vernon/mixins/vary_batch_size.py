@@ -51,9 +51,8 @@ class VaryBatchSize(object):
             ))
 
         self.current_batch_size_variant = 0
-        self.batch_size = self.train_loader.batch_size
         self.logger.info("Setting batch_size={} (variant {})".format(
-            self.batch_size, self.current_batch_size_variant
+            self.train_loader.batch_size, self.current_batch_size_variant
         ))
 
     def post_epoch(self):
@@ -64,9 +63,8 @@ class VaryBatchSize(object):
         i = self.current_batch_size_variant
         self.current_batch_size_variant = min(i + 1, len(self.train_loaders) - 1)
         self.train_loader = self.train_loaders[self.current_batch_size_variant]
-        self.batch_size = self.train_loader.batch_size
         self.logger.info("Setting batch_size={} (variant {})".format(
-            self.batch_size, self.current_batch_size_variant
+            self.train_loader.batch_size, self.current_batch_size_variant
         ))
 
     @classmethod

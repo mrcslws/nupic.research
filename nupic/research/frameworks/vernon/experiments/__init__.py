@@ -19,27 +19,8 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
-
-class ConstrainParameters(object):
-    """
-    Calls modules' "constrain_parameters" method after every batch.
-    """
-    def setup_experiment(self, config):
-        super().setup_experiment(config)
-        self._constrain_parameters_modules = [
-            module
-            for module in self.model.modules()
-            if hasattr(module, "constrain_parameters")
-        ]
-
-    def post_optimizer_step(self, **kwargs):
-        super().post_optimizer_step(**kwargs)
-        for module in self._constrain_parameters_modules:
-            module.constrain_parameters()
-
-    @classmethod
-    def get_execution_order(cls):
-        eo = super().get_execution_order()
-        eo["setup_experiment"].append("ConstrainParameters initialization")
-        eo["post_optimizer_step"].append("ConstrainParameters")
-        return eo
+from .base_experiment import *
+from .cl_experiment import *
+from .imagenet_experiment import *
+from .meta_cl_experiment import *
+from .supervised_experiment import *

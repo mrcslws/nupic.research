@@ -21,6 +21,8 @@
 
 from .constrain_parameters import ConstrainParameters
 from .export_model import ExportModel
+from .extra_validations import ExtraValidations
+from .fixed_lr_schedule import FixedLRSchedule
 from .knowledge_distillation import KnowledgeDistillation, KnowledgeDistillationCL
 from .load_preprocessed_data import LoadPreprocessedData
 from .log_backprop_structure import LogBackpropStructure
@@ -29,6 +31,7 @@ from .log_every_learning_rate import LogEveryLearningRate
 from .log_every_loss import LogEveryLoss
 from .lr_range_test import LRRangeTest, create_lr_test_experiment
 from .maxup import MaxupStandard, MaxupPerSample
+from .mixed_precision import MixedPrecision
 from .multi_cycle_lr import MultiCycleLR
 from .profile import Profile
 from .profile_autograd import ProfileAutograd
@@ -37,9 +40,9 @@ from .prune_low_snr import PruneLowSNR
 from .regularize_loss import RegularizeLoss
 from .rezero_weights import RezeroWeights
 from .save_final_checkpoint import SaveFinalCheckpoint
+from .selective_weight_decay import SelectiveWeightDecay
 from .update_boost_strength import UpdateBoostStrength
 from .cutmix import CutMix, CutMixKnowledgeDistillation
-from .composite_loss import CompositeLoss
 from .quantization_aware import QuantizationAware
 from .reduce_lr_after_task import ReduceLRAfterTask
 from .vary_batch_size import VaryBatchSize

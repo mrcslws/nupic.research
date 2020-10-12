@@ -31,7 +31,8 @@ class LRRangeTest(object):
     """
 
     # List the required mixins that should be accompanied with this class.
-    required_mixins = [mixins.LogEveryLoss, mixins.LogEveryLearningRate]
+    required_mixins = [mixins.LogEveryLoss, mixins.LogEveryLearningRate,
+                       mixins.FixedLRSchedule]
 
     def setup_experiment(self, config):
         """
