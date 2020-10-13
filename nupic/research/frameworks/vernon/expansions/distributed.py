@@ -23,6 +23,7 @@
 import copy
 
 import torch.distributed as dist
+from torch import multiprocessing
 
 __all__ = [
     "Distributed",
@@ -62,6 +63,10 @@ class Distributed:
 
         self.distributed = distributed
         self.rank = rank
+
+        # CUDA runtime does not support the fork start method.
+        # See https://pytorch.org/docs/stable/notes/multiprocessing.html
+        multiprocessing.set_start_method("spawn", force=True)
 
         if self.distributed:
             dist_url = config.get("dist_url", "tcp://127.0.0.1:54321")

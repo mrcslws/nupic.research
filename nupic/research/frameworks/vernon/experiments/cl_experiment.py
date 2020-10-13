@@ -20,7 +20,6 @@
 # ----------------------------------------------------------------------
 
 import math
-import sys
 import time
 from collections import defaultdict
 
@@ -34,7 +33,6 @@ from nupic.research.frameworks.pytorch.dataset_utils.samplers import (
     TaskDistributedSampler,
     TaskRandomSampler,
 )
-from nupic.research.frameworks.pytorch.model_utils import evaluate_model, train_model
 from nupic.research.frameworks.vernon import expansions
 from nupic.research.frameworks.vernon.experiments.base_experiment import BaseExperiment
 
@@ -44,10 +42,11 @@ __all__ = [
 
 
 class ContinualLearningExperiment(expansions.ContinualLearningMetrics,
-                                  expansions.Distributed,
+                                  expansions.SupervisedLearning,
                                   expansions.HasEpochs,
                                   expansions.HasOptimizer,
                                   expansions.HasModel,
+                                  expansions.Distributed,
                                   BaseExperiment):
     def setup_experiment(self, config):
         super().setup_experiment(config)
@@ -62,12 +61,7 @@ class ContinualLearningExperiment(expansions.ContinualLearningMetrics,
         self.val_loader = self.create_validation_dataloader(config)
         self.total_batches = len(self.train_loader)
 
-        self._loss_function = config.get(
-            "loss_function", torch.nn.functional.cross_entropy
-        )
         self.epochs = config.get("epochs", 1)
-        self.batches_in_epoch = config.get("batches_in_epoch", sys.maxsize)
-        self.batches_in_epoch_val = config.get("batches_in_epoch_val", sys.maxsize)
 
         self.current_task = 0
 
@@ -114,9 +108,8 @@ class ContinualLearningExperiment(expansions.ContinualLearningMetrics,
         self.train_loader.sampler.set_active_tasks(self.current_task)
 
         # Run epochs, inner loop
-        # TODO: get and return the results from run_epoch
         for _ in range(self.epochs):
-            self.run_epoch()
+            self.train_epoch(self.train_loader)
 
         ret = self.evaluate_all_metrics()
         ret.update(
@@ -136,43 +129,17 @@ class ContinualLearningExperiment(expansions.ContinualLearningMetrics,
                 ret[f"{metric}__{k}"] = v
         return ret
 
-    def run_epoch(self):
-        self.pre_epoch()
-        self.train_epoch()
-        self.post_epoch()
-
-        self.current_epoch += 1
-
     def pre_epoch(self):
         super().pre_epoch()
         if self.distributed:
             self.train_loader.sampler.set_epoch(self.current_epoch)
 
-    def train_epoch(self):
-        train_model(
-            model=self.model,
-            loader=self.train_loader,
-            optimizer=self.optimizer,
-            device=self.device,
-            criterion=self.error_loss,
-            complexity_loss_fn=self.complexity_loss,
-            batches_in_epoch=self.batches_in_epoch,
-            pre_batch_callback=self.pre_batch,
-            post_batch_callback=self.post_batch_wrapper,
-            transform_to_device_fn=self.transform_data_to_device,
-        )
+    def post_batch(self, error_loss, batch_idx, num_images, time_string,
+                   **kwargs):
+        super().post_batch(error_loss=error_loss, batch_idx=batch_idx,
+                           num_images=num_images, time_string=time_string,
+                           **kwargs)
 
-    def pre_batch(self, model, batch_idx):
-        """
-        Called before passing a batch into the model.
-        """
-
-    def post_batch(self, model, error_loss, complexity_loss, batch_idx,
-                   num_images, time_string):
-        """
-        Called after the batch has been processed and learned from. Guaranteed
-        to run after post_optimizer_step() has finished.
-        """
         if self.progress and self.current_epoch == 0 and batch_idx == 0:
             self.logger.info("Launch time to end of first batch: %s",
                              time.time() - self.launch_time)
@@ -190,44 +157,6 @@ class ContinualLearningExperiment(expansions.ContinualLearningMetrics,
                               total_batches, error_loss, self.get_lr(),
                               num_images)
             self.logger.debug("Timing: %s", time_string)
-
-    def post_batch_wrapper(self, **kwargs):
-        self.post_optimizer_step()
-        self.post_batch(**kwargs)
-
-    def error_loss(self, output, target, reduction="mean"):
-        """
-        The error loss component of the loss function.
-        """
-        return self._loss_function(output, target, reduction=reduction)
-
-    def complexity_loss(self, model):
-        """
-        The model complexity component of the loss function.
-        """
-
-    def transform_data_to_device(self, data, target, device, non_blocking):
-        """
-        This provides an extensibility point for performing any final
-        transformations on the data or targets.
-        """
-        data = data.to(self.device, non_blocking=non_blocking)
-        target = target.to(self.device, non_blocking=non_blocking)
-        return data, target
-
-    def validate(self, loader=None):
-        if loader is None:
-            loader = self.val_loader
-
-        return evaluate_model(
-            model=self.model,
-            loader=loader,
-            device=self.device,
-            criterion=self.error_loss,
-            complexity_loss_fn=self.complexity_loss,
-            batches_in_epoch=self.batches_in_epoch_val,
-            transform_to_device_fn=self.transform_data_to_device,
-        )
 
     def pre_experiment(self):
         if self.validate_immediately:
@@ -340,6 +269,7 @@ class ContinualLearningExperiment(expansions.ContinualLearningMetrics,
         # Extended methods
         eo["setup_experiment"].append(exp + ".setup_experiment")
         eo["pre_epoch"].append(exp + ": Update distributed sampler")
+        eo["post_batch"].append(exp + ": Logging")
 
         eo.update(
             # Overwritten methods
@@ -348,13 +278,5 @@ class ContinualLearningExperiment(expansions.ContinualLearningMetrics,
 
             # New methods
             run_task=[exp + ".run_task"],
-            validate=[exp + ".validate"],
-            train_epoch=[exp + ".train_epoch"],
-            run_epoch=[exp + ".run_epoch"],
-            pre_batch=[],
-            post_batch=[exp + ": Logging"],
-            transform_data_to_device=[exp + ".transform_data_to_device"],
-            error_loss=[exp + ".error_loss"],
-            complexity_loss=[],
         )
         return eo

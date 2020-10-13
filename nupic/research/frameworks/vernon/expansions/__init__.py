@@ -33,3 +33,4 @@ from .has_lr_scheduler import *
 from .has_model import *
 from .has_optimizer import *
 from .step_based_logging import *
+from .supervised_learning import *

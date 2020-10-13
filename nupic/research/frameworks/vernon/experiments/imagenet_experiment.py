@@ -36,60 +36,13 @@ __all__ = [
 class ImagenetExperiment(mixins.SelectiveWeightDecay,
                          mixins.MixedPrecision,
                          mixins.ExtraValidations,
-                         mixins.FixedLRSchedule,
+                         expansions.FixedLRSchedule,
                          expansions.StepBasedLogging,
                          SupervisedExperiment):
     """
     Experiment class used to train Sparse and dense versions of Resnet50 v1.5
     models on Imagenet dataset
     """
-    def setup_experiment(self, config):
-        """
-            - train_model_func: Optional user defined function to train the model,
-                                expected to behave similarly to `train_model`
-                                in terms of input parameters and return values
-            - evaluate_model_func: Optional user defined function to validate the model
-                                   expected to behave similarly to `evaluate_model`
-                                   in terms of input parameters and return values
-        """
-        config = copy.copy(config)
-        config.setdefault("epochs", 1)  # Necessary for next line.
-        config.setdefault("epochs_to_validate", range(config["epochs"] - 3,
-                                                      config["epochs"]))
-
-        super().setup_experiment(config)
-
-        self.train_model = config.get("train_model_func", train_model)
-        self.evaluate_model = config.get("evaluate_model_func", evaluate_model)
-
-    def train_epoch(self):
-        self.train_model(
-            model=self.model,
-            loader=self.train_loader,
-            optimizer=self.optimizer,
-            device=self.device,
-            criterion=self.error_loss,
-            complexity_loss_fn=self.complexity_loss,
-            batches_in_epoch=self.batches_in_epoch,
-            pre_batch_callback=self.pre_batch,
-            post_batch_callback=self.post_batch_wrapper,
-            transform_to_device_fn=self.transform_data_to_device,
-        )
-
-    def validate(self, loader=None):
-        if loader is None:
-            loader = self.val_loader
-
-        return self.evaluate_model(
-            model=self.model,
-            loader=loader,
-            device=self.device,
-            criterion=self.error_loss,
-            complexity_loss_fn=self.complexity_loss,
-            batches_in_epoch=self.batches_in_epoch_val,
-            transform_to_device_fn=self.transform_data_to_device,
-        )
-
     @classmethod
     def load_dataset(cls, config, train=True):
         config = copy.copy(config)
@@ -114,14 +67,6 @@ class ImagenetExperiment(mixins.SelectiveWeightDecay,
         exp = "ImagenetExperiment"
 
         # Extended methods
-        eo["setup_experiment"].insert(0, exp + ": Compatibility shims")
-        eo["setup_experiment"].append(exp + ": Additional setup")
         eo["load_dataset"].insert(0, exp + ": Set default dataset")
-
-        eo.update(
-            # Overwritten methods
-            train_model=[exp + ": Call train_model_func"],
-            validate=[exp + ": Call evaluate_model_func"],
-        )
 
         return eo

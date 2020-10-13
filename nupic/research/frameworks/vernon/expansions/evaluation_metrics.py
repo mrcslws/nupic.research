@@ -32,28 +32,28 @@ class ContinualLearningMetrics(object):
         Evaluates accuracy at current task only. Used for debugging.
         """
         self.val_loader.sampler.set_active_tasks(self.current_task)
-        return self.validate()
+        return self.validate(self.val_loader)
 
     def eval_first_task(self):
         """
         Evaluates accuracy at first task only. Used for debugging.
         """
         self.val_loader.sampler.set_active_tasks(0)
-        return self.validate()
+        return self.validate(self.val_loader)
 
     def eval_all_visited_tasks(self):
         """
         Evaluates all tasks seen so far jointly. Equivalent to average accuracy
         """
         self.val_loader.sampler.set_active_tasks(range(0, self.current_task + 1))
-        return self.validate()
+        return self.validate(self.val_loader)
 
     def eval_all_tasks(self):
         """
         Evaluates all tasks, including visited and not visited tasks.
         """
         self.val_loader.sampler.set_active_tasks(range(0, self.num_tasks))
-        return self.validate()
+        return self.validate(self.val_loader)
 
     def eval_individual_tasks(self):
         """
@@ -63,6 +63,6 @@ class ContinualLearningMetrics(object):
         task_results = {}
         for task_id in range(0, self.current_task + 1):
             self.val_loader.sampler.set_active_tasks(task_id)
-            for k, v in self.validate().items():
+            for k, v in self.validate(self.val_loader).items():
                 task_results[f"task{task_id}__{k}"] = v
         return task_results
