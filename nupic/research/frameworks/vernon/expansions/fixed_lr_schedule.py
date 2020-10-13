@@ -24,7 +24,7 @@ from pprint import pformat
 from torch.optim.lr_scheduler import OneCycleLR
 
 from nupic.research.frameworks.pytorch.lr_scheduler import ComposedLRScheduler
-from nupic.research.frameworks.vernon import expansions
+from nupic.research.frameworks.vernon.expansions.has_lr_scheduler import HasLRScheduler
 from nupic.research.frameworks.vernon.experiment_utils import create_lr_scheduler
 
 __all__ = [
@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-class FixedLRSchedule(expansions.HasLRScheduler):
+class FixedLRSchedule(HasLRScheduler):
     """
     Use an LR schedule that steps every batch or every epoch.
     """

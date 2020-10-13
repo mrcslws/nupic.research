@@ -27,6 +27,7 @@ self attributes or utility methods used by other mixins or subclasses.
 from .composite_loss import CompositeLoss
 from .distributed import *
 from .evaluation_metrics import *
+from .fixed_lr_schedule import *
 from .has_epochs import *
 from .has_lr_scheduler import *
 from .has_model import *

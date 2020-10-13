@@ -22,7 +22,6 @@
 from .constrain_parameters import ConstrainParameters
 from .export_model import ExportModel
 from .extra_validations import ExtraValidations
-from .fixed_lr_schedule import FixedLRSchedule
 from .knowledge_distillation import KnowledgeDistillation, KnowledgeDistillationCL
 from .load_preprocessed_data import LoadPreprocessedData
 from .log_backprop_structure import LogBackpropStructure
